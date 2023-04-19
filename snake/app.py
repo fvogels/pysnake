@@ -31,9 +31,42 @@ class SnakeSegment:
         return RED
 
 
+
+class Position:
+    def __init__(self, x, y):
+        self.__x = x
+        self.__y = y
+
+    @property
+    def x(self):
+        return self.__x
+
+    @property
+    def y(self):
+        return self.__y
+
+
+class Direction:
+    def __init__(self, dx, dy):
+        self.__dx = dx
+        self.__dy = dy
+
+    @property
+    def dx(self):
+        return self.__dx
+
+    @property
+    def dy(self):
+        return self.__dy
+
+
 class Level:
     def __init__(self):
         self.__grid = self.__create_grid()
+        self.__snake_head = (16, 16)
+        self.__snake_tail = (15, 16)
+        self.__grid[16][16] = SnakeSegment(None)
+        self.__grid[16][15] = SnakeSegment(self.__grid[16][16])
 
     @property
     def width(self):
