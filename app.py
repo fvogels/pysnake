@@ -2,6 +2,7 @@ import pygame
 import sys
 from snake.position import Position
 from snake.direction import Direction
+from snake.timer import Timer
 
 
 FRAMES_PER_SECOND = 75
