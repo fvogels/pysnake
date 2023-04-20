@@ -23,7 +23,7 @@ class Wall:
 
 
 class SnakeSegment:
-    def __init__(self, next):
+    def __init__(self, *, next=None):
         self.next = next
 
     @property
@@ -45,6 +45,17 @@ class Position:
     def y(self):
         return self.__y
 
+    def __add__(self, direction):
+        x = self.x + direction.dx
+        y = self.y + direction.dy
+        return Position(x, y)
+
+    def __repr__(self):
+        return f'Position({self.x}, {self.y})'
+
+    def __str__(self):
+        return f'({self.x}, {self.y})'
+
 
 class Direction:
     def __init__(self, dx, dy):
@@ -61,12 +72,21 @@ class Direction:
 
 
 class Level:
-    def __init__(self):
-        self.__grid = self.__create_grid()
-        self.__snake_head = (16, 16)
-        self.__snake_tail = (15, 16)
-        self.__grid[16][16] = SnakeSegment(None)
-        self.__grid[16][15] = SnakeSegment(self.__grid[16][16])
+    def __init__(self, width, height):
+        self.__grid = self.__create_empty_grid(width, height)
+
+    def __create_empty_grid(self, width, height):
+        def initialize(x, y):
+            if x == 0 or y == 0 or x == width - 1 or y == height - 1:
+                return Wall()
+            else:
+                return Empty()
+
+        return [
+            [initialize(x, y) for x in range(width)]
+            for y in range(height)
+        ]
+
 
     @property
     def width(self):
@@ -76,31 +96,53 @@ class Level:
     def height(self):
         return len(self.__grid)
 
-    def __create_grid(self):
-        width, height = (32, 32)
-        grid = [
-            [Empty() for _ in range(width)]
-            for _ in range(height)
-        ]
-        for x in range(width):
-            grid[0][x] = grid[height-1][x] = Wall()
-        for y in range(height):
-            grid[y][0] = grid[y][width-1] = Wall()
-        return grid
-
     def __getitem__(self, position):
-        x, y = position
-        return self.__grid[y][x]
+        return self.__grid[position.y][position.x]
+
+    def __setitem__(self, position, value):
+        self.__grid[position.y][position.x] = value
+
+
+def create_level():
+    level = Level(32, 32)
+    tail = Position(15, 16)
+    head = Position(16, 16)
+
+    level[tail] = SnakeSegment(next=head)
+    level[head] = SnakeSegment()
+
+    return (level, head, tail)
+
+
+class State:
+    def __init__(self, level_factory):
+        self.__level, self.__snake_head, self.__snake_tail = level_factory()
+
+    @property
+    def level(self):
+        return self.__level
+
+    def advance_head(self, direction):
+        old_snake_head = self.__snake_head
+        new_snake_head = old_snake_head + direction
+        self.__level[old_snake_head].next = new_snake_head
+        self.__snake_head = new_snake_head
+
+    def advance_tail(self):
+        old_snake_tail = self.__snake_tail
+        new_snake_tail = self.__level[old_snake_tail].next
+        self.__level[old_snake_tail] = Empty()
+        self.__snake_tail = new_snake_tail
 
 
 def create_display_surface(surface_size):
     return pygame.display.set_mode(surface_size)
 
 
-def render_grid(surface, grid):
-    for y in range(grid.height):
-        for x in range(grid.width):
-            cell = grid[(x, y)]
+def render_level(surface, level):
+    for y in range(level.height):
+        for x in range(level.width):
+            cell = level[Position(x, y)]
             color = cell.color
             rectangle = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             pygame.draw.rect(surface, color, rectangle)
@@ -110,8 +152,8 @@ def render_grid(surface, grid):
 pygame.init()
 
 # Create window with given size
-grid = Level()
-display_surface = create_display_surface((grid.width * CELL_SIZE, grid.height * CELL_SIZE))
+state = State(create_level)
+display_surface = create_display_surface((state.level.width * CELL_SIZE, state.level.height * CELL_SIZE))
 clock = pygame.time.Clock()
 
 
@@ -122,7 +164,7 @@ while True:
             sys.exit(0)
 
     display_surface.fill((0,0,0))
-    render_grid(display_surface, grid)
+    render_level(display_surface, state.level)
 
     pygame.display.update()
     clock.tick(FRAMES_PER_SECOND)
