@@ -41,6 +41,10 @@ class Food:
     def color(self):
         return GREEN
 
+WALL = Wall()
+EMPTY = Empty()
+FOOD = Food()
+
 
 class Level:
     def __init__(self, width, height):
@@ -49,9 +53,9 @@ class Level:
     def __create_empty_grid(self, width, height):
         def initialize(x, y):
             if x == 0 or y == 0 or x == width - 1 or y == height - 1:
-                return Wall()
+                return WALL
             else:
-                return Empty()
+                return EMPTY
 
         return [
             [initialize(x, y) for x in range(width)]
@@ -142,14 +146,16 @@ class State:
     def level(self):
         return self.__level
 
-    def advance_head(self, direction):
+    def __next_head_position(self, direction):
+        return self.__snake_head + direction
+
+    def __advance_head_to(self, new_snake_head):
         old_snake_head = self.__snake_head
-        new_snake_head = old_snake_head + direction
         self.__level[old_snake_head].next = new_snake_head
         self.__level[new_snake_head] = SnakeSegment()
         self.__snake_head = new_snake_head
 
-    def advance_tail(self):
+    def __advance_tail(self):
         old_snake_tail = self.__snake_tail
         new_snake_tail = self.__level[old_snake_tail].next
         self.__level[old_snake_tail] = Empty()
@@ -165,25 +171,28 @@ class State:
             x = random.randint(0, self.__level.width - 1)
             y = random.randint(0, self.__level.height - 1)
             position = Position(x, y)
-            if isinstance(self.__level[position], Empty):
+            if self.__level[position] is EMPTY:
                 return position
-
 
     def __update_food(self, elapsed_seconds):
         self.__food_timer.tick(elapsed_seconds)
         if self.__food_timer.ready:
             self.__food_timer.consume()
             position = self.__find_random_empty_cell()
-            self.__level[position] = Food()
+            self.__level[position] = FOOD
 
     def __update_movement(self, elapsed_seconds):
         self.__move_direction = self.__input.direction or self.__move_direction
         self.__move_timer.tick(elapsed_seconds)
         if self.__move_timer.ready:
             self.__move_timer.consume()
-            self.advance_head(self.__move_direction)
+            new_snake_head = self.__next_head_position(self.__move_direction)
+            destination_contents = self.__level[new_snake_head]
+            if destination_contents is FOOD:
+                self.__snake_growth += 2
+            self.__advance_head_to(new_snake_head)
             if self.__snake_growth == 0:
-                self.advance_tail()
+                self.__advance_tail()
             else:
                 self.__snake_growth -= 1
 
