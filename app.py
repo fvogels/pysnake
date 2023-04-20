@@ -1,4 +1,5 @@
 import pygame
+import random
 import sys
 from snake.position import Position
 from snake.direction import *
@@ -11,6 +12,7 @@ CELL_SIZE = 32
 BLACK = pygame.Color(0, 0, 0)
 WHITE = pygame.Color(255, 255, 255)
 RED = pygame.Color(255, 0, 0)
+GREEN = pygame.Color(0, 255, 0)
 
 
 class Empty:
@@ -32,6 +34,12 @@ class SnakeSegment:
     @property
     def color(self):
         return RED
+
+
+class Food:
+    @property
+    def color(self):
+        return GREEN
 
 
 class Level:
@@ -126,7 +134,8 @@ class State:
     def __init__(self, level_factory):
         self.__level, self.__snake_head, self.__snake_tail, self.__move_direction = level_factory()
         self.__input = Input()
-        self.__timer = Timer(0.1)
+        self.__move_timer = Timer(0.1)
+        self.__food_timer = Timer(1)
         self.__snake_growth = 0
 
     @property
@@ -148,15 +157,32 @@ class State:
 
     def tick(self, elapsed_seconds):
         self.__input.reset()
+        self.__update_food(elapsed_seconds)
         self.__move_direction = self.__input.direction or self.__move_direction
-        self.__timer.tick(elapsed_seconds)
-        if self.__timer.ready:
+        self.__move_timer.tick(elapsed_seconds)
+        if self.__move_timer.ready:
+            self.__move_timer.consume()
             self.advance_head(self.__move_direction)
             if self.__snake_growth == 0:
                 self.advance_tail()
             else:
                 self.__snake_growth -= 1
-            self.__timer.consume()
+
+    def __find_random_empty_cell(self):
+        while True:
+            x = random.randint(0, self.__level.width - 1)
+            y = random.randint(0, self.__level.height - 1)
+            position = Position(x, y)
+            if isinstance(self.__level[position], Empty):
+                return position
+
+
+    def __update_food(self, elapsed_seconds):
+        self.__food_timer.tick(elapsed_seconds)
+        if self.__food_timer.ready:
+            self.__food_timer.consume()
+            position = self.__find_random_empty_cell()
+            self.__level[position] = Food()
 
 
 def create_display_surface(surface_size):
