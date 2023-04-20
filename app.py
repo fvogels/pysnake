@@ -12,7 +12,9 @@ CELL_SIZE = 32
 BLACK = pygame.Color(0, 0, 0)
 WHITE = pygame.Color(255, 255, 255)
 RED = pygame.Color(255, 0, 0)
+LIGHT_RED = pygame.Color(255, 128, 128)
 GREEN = pygame.Color(0, 255, 0)
+BLUE = pygame.Color(0, 0, 255)
 
 
 class Empty:
@@ -36,15 +38,28 @@ class SnakeSegment:
         return RED
 
 
+class SnakeHead:
+    @property
+    def color(self):
+        return LIGHT_RED
+
+
 class Food:
     @property
     def color(self):
         return GREEN
 
+
+class SpeedBoost:
+    @property
+    def color(self):
+        return BLUE
+
+
 WALL = Wall()
 EMPTY = Empty()
 FOOD = Food()
-
+SPEEDBOOST = SpeedBoost()
 
 class Level:
     def __init__(self, width, height):
@@ -84,7 +99,7 @@ def create_level():
     head = Position(16, 16)
 
     level[tail] = SnakeSegment(next=head)
-    level[head] = SnakeSegment()
+    level[head] = SnakeHead()
 
     return (level, head, tail, EAST)
 
@@ -139,7 +154,7 @@ class State:
         self.__level, self.__snake_head, self.__snake_tail, self.__move_direction = level_factory()
         self.__input = Input()
         self.__move_timer = Timer(0.1)
-        self.__food_timer = Timer(1)
+        self.__bonus_timer = Timer(1)
         self.__snake_growth = 0
 
     @property
@@ -151,19 +166,19 @@ class State:
 
     def __advance_head_to(self, new_snake_head):
         old_snake_head = self.__snake_head
-        self.__level[old_snake_head].next = new_snake_head
-        self.__level[new_snake_head] = SnakeSegment()
+        self.__level[old_snake_head] = SnakeSegment(next=new_snake_head)
+        self.__level[new_snake_head] = SnakeHead()
         self.__snake_head = new_snake_head
 
     def __advance_tail(self):
         old_snake_tail = self.__snake_tail
         new_snake_tail = self.__level[old_snake_tail].next
-        self.__level[old_snake_tail] = Empty()
+        self.__level[old_snake_tail] = EMPTY
         self.__snake_tail = new_snake_tail
 
     def tick(self, elapsed_seconds):
         self.__input.reset()
-        self.__update_food(elapsed_seconds)
+        self.__update_bonuses(elapsed_seconds)
         self.__update_movement(elapsed_seconds)
 
     def __find_random_empty_cell(self):
@@ -174,12 +189,12 @@ class State:
             if self.__level[position] is EMPTY:
                 return position
 
-    def __update_food(self, elapsed_seconds):
-        self.__food_timer.tick(elapsed_seconds)
-        if self.__food_timer.ready:
-            self.__food_timer.consume()
+    def __update_bonuses(self, elapsed_seconds):
+        self.__bonus_timer.tick(elapsed_seconds)
+        if self.__bonus_timer.ready:
+            self.__bonus_timer.consume()
             position = self.__find_random_empty_cell()
-            self.__level[position] = FOOD
+            self.__level[position] = random.choice([FOOD, SPEEDBOOST])
 
     def __update_movement(self, elapsed_seconds):
         self.__move_direction = self.__input.direction or self.__move_direction
@@ -190,6 +205,10 @@ class State:
             destination_contents = self.__level[new_snake_head]
             if destination_contents is FOOD:
                 self.__snake_growth += 2
+            elif destination_contents is SPEEDBOOST:
+                self.__move_timer.delay *= 0.9
+            elif destination_contents is not EMPTY:
+                sys.exit(0)
             self.__advance_head_to(new_snake_head)
             if self.__snake_growth == 0:
                 self.__advance_tail()
