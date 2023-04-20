@@ -1,7 +1,7 @@
 import pygame
 import sys
 from snake.position import Position
-from snake.direction import Direction
+from snake.direction import *
 from snake.timer import Timer
 
 
@@ -80,6 +80,7 @@ def create_level():
 class State:
     def __init__(self, level_factory):
         self.__level, self.__snake_head, self.__snake_tail = level_factory()
+        self.__timer = Timer(0.1)
 
     @property
     def level(self):
@@ -89,6 +90,7 @@ class State:
         old_snake_head = self.__snake_head
         new_snake_head = old_snake_head + direction
         self.__level[old_snake_head].next = new_snake_head
+        self.__level[new_snake_head] = SnakeSegment()
         self.__snake_head = new_snake_head
 
     def advance_tail(self):
@@ -96,6 +98,12 @@ class State:
         new_snake_tail = self.__level[old_snake_tail].next
         self.__level[old_snake_tail] = Empty()
         self.__snake_tail = new_snake_tail
+
+    def tick(self, elapsed_seconds):
+        self.__timer.tick(elapsed_seconds)
+        if self.__timer.ready:
+            self.advance_head(EAST)
+            self.__timer.consume()
 
 
 def create_display_surface(surface_size):
@@ -128,6 +136,7 @@ while True:
 
     display_surface.fill((0,0,0))
     render_level(display_surface, state.level)
+    pygame.display.flip()
 
-    pygame.display.update()
-    clock.tick(FRAMES_PER_SECOND)
+    elapsed_seconds = clock.tick(FRAMES_PER_SECOND) / 1000
+    state.tick(elapsed_seconds)
