@@ -1,6 +1,6 @@
 class Timer:
     def __init__(self, delay):
-        self.__delay = delay
+        self.delay = delay
         self.__elapsed_seconds = 0
 
     def tick(self, elapsed_seconds):
@@ -8,9 +8,9 @@ class Timer:
 
     @property
     def ready(self):
-        return self.__elapsed_seconds >= self.__delay
+        return self.__elapsed_seconds >= self.delay
 
     def consume(self):
         if not self.ready:
             raise RuntimeError()
-        self.__elapsed_seconds -= self.__delay
+        self.__elapsed_seconds -= self.delay

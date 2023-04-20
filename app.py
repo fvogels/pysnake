@@ -74,12 +74,58 @@ def create_level():
     level[tail] = SnakeSegment(next=head)
     level[head] = SnakeSegment()
 
-    return (level, head, tail)
+    return (level, head, tail, EAST)
+
+
+
+class Input:
+    def __init__(self):
+        self.__inputs = None
+
+    def reset(self):
+        self.__inputs = None
+
+    def __update(self):
+        if not self.__inputs:
+            self.__inputs = pygame.key.get_pressed()
+
+    def __is_pressed(self, key):
+        self.__update()
+        return self.__inputs[key]
+
+    @property
+    def up(self):
+        return self.__is_pressed(pygame.K_UP)
+
+    @property
+    def down(self):
+        return self.__is_pressed(pygame.K_DOWN)
+
+    @property
+    def left(self):
+        return self.__is_pressed(pygame.K_LEFT)
+
+    @property
+    def right(self):
+        return self.__is_pressed(pygame.K_RIGHT)
+
+    @property
+    def direction(self):
+        if self.up:
+            return NORTH
+        if self.down:
+            return SOUTH
+        if self.left:
+            return WEST
+        if self.right:
+            return EAST
+        return None
 
 
 class State:
     def __init__(self, level_factory):
-        self.__level, self.__snake_head, self.__snake_tail = level_factory()
+        self.__level, self.__snake_head, self.__snake_tail, self.__move_direction = level_factory()
+        self.__input = Input()
         self.__timer = Timer(0.1)
 
     @property
@@ -100,9 +146,11 @@ class State:
         self.__snake_tail = new_snake_tail
 
     def tick(self, elapsed_seconds):
+        self.__input.reset()
+        self.__move_direction = self.__input.direction or self.__move_direction
         self.__timer.tick(elapsed_seconds)
         if self.__timer.ready:
-            self.advance_head(EAST)
+            self.advance_head(self.__move_direction)
             self.__timer.consume()
 
 
