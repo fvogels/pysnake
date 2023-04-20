@@ -127,6 +127,7 @@ class State:
         self.__level, self.__snake_head, self.__snake_tail, self.__move_direction = level_factory()
         self.__input = Input()
         self.__timer = Timer(0.1)
+        self.__snake_growth = 0
 
     @property
     def level(self):
@@ -151,6 +152,10 @@ class State:
         self.__timer.tick(elapsed_seconds)
         if self.__timer.ready:
             self.advance_head(self.__move_direction)
+            if self.__snake_growth == 0:
+                self.advance_tail()
+            else:
+                self.__snake_growth -= 1
             self.__timer.consume()
 
 
