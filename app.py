@@ -158,15 +158,7 @@ class State:
     def tick(self, elapsed_seconds):
         self.__input.reset()
         self.__update_food(elapsed_seconds)
-        self.__move_direction = self.__input.direction or self.__move_direction
-        self.__move_timer.tick(elapsed_seconds)
-        if self.__move_timer.ready:
-            self.__move_timer.consume()
-            self.advance_head(self.__move_direction)
-            if self.__snake_growth == 0:
-                self.advance_tail()
-            else:
-                self.__snake_growth -= 1
+        self.__update_movement(elapsed_seconds)
 
     def __find_random_empty_cell(self):
         while True:
@@ -183,6 +175,17 @@ class State:
             self.__food_timer.consume()
             position = self.__find_random_empty_cell()
             self.__level[position] = Food()
+
+    def __update_movement(self, elapsed_seconds):
+        self.__move_direction = self.__input.direction or self.__move_direction
+        self.__move_timer.tick(elapsed_seconds)
+        if self.__move_timer.ready:
+            self.__move_timer.consume()
+            self.advance_head(self.__move_direction)
+            if self.__snake_growth == 0:
+                self.advance_tail()
+            else:
+                self.__snake_growth -= 1
 
 
 def create_display_surface(surface_size):
