@@ -1,6 +1,7 @@
 import pygame
 import sys
 from snake.position import Position
+from snake.direction import Direction
 
 
 FRAMES_PER_SECOND = 75
@@ -30,21 +31,6 @@ class SnakeSegment:
     @property
     def color(self):
         return RED
-
-
-
-class Direction:
-    def __init__(self, dx, dy):
-        self.__dx = dx
-        self.__dy = dy
-
-    @property
-    def dx(self):
-        return self.__dx
-
-    @property
-    def dy(self):
-        return self.__dy
 
 
 class Level:
