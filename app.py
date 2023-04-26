@@ -9,24 +9,17 @@ from snake.timer import Timer
 FRAMES_PER_SECOND = 75
 CELL_SIZE = 32
 
-BLACK = pygame.Color(0, 0, 0)
-WHITE = pygame.Color(255, 255, 255)
-RED = pygame.Color(255, 0, 0)
-LIGHT_RED = pygame.Color(255, 128, 128)
-GREEN = pygame.Color(0, 255, 0)
-BLUE = pygame.Color(0, 0, 255)
-
 
 class Empty:
     @property
     def color(self):
-        return BLACK
+        return pygame.Color('black')
 
 
 class Wall:
     @property
     def color(self):
-        return WHITE
+        return pygame.Color('white')
 
 
 class SnakeSegment:
@@ -35,25 +28,25 @@ class SnakeSegment:
 
     @property
     def color(self):
-        return RED
+        return pygame.Color('red')
 
 
 class SnakeHead:
     @property
     def color(self):
-        return LIGHT_RED
+        return pygame.Color('red4')
 
 
 class Food:
     @property
     def color(self):
-        return GREEN
+        return pygame.Color('green')
 
 
 class SpeedBoost:
     @property
     def color(self):
-        return BLUE
+        return pygame.Color('blue')
 
 
 WALL = Wall()
