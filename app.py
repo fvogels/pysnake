@@ -4,6 +4,8 @@ import sys
 from snake.position import Position
 from snake.direction import *
 from snake.timer import Timer
+from snake.keybindings import KeyBindings, ActionBuffer
+import snake.actions as actions
 
 
 FRAMES_PER_SECOND = 75
@@ -190,10 +192,18 @@ class State:
             self.__level[position] = random.choice([FOOD, SPEEDBOOST])
 
     def __update_movement(self, elapsed_seconds):
-        self.__move_direction = self.__input.direction or self.__move_direction
         self.__move_timer.tick(elapsed_seconds)
         if self.__move_timer.ready:
             self.__move_timer.consume()
+            action = action_buffer.pop()
+            if action == actions.LEFT:
+                self.__move_direction = WEST
+            elif action == actions.RIGHT:
+                self.__move_direction = EAST
+            elif action == actions.UP:
+                self.__move_direction = NORTH
+            elif action == actions.DOWN:
+                self.__move_direction = SOUTH
             new_snake_head = self.__next_head_position(self.__move_direction)
             destination_contents = self.__level[new_snake_head]
             if destination_contents is FOOD:
@@ -230,12 +240,22 @@ state = State(create_level)
 display_surface = create_display_surface((state.level.width * CELL_SIZE, state.level.height * CELL_SIZE))
 clock = pygame.time.Clock()
 
+key_bindings = KeyBindings()
+action_buffer = ActionBuffer()
+
+key_bindings.bind(pygame.K_LEFT, action_buffer, actions.LEFT)
+key_bindings.bind(pygame.K_RIGHT, action_buffer, actions.RIGHT)
+key_bindings.bind(pygame.K_UP, action_buffer, actions.UP)
+key_bindings.bind(pygame.K_DOWN, action_buffer, actions.DOWN)
+
 
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit(0)
+        elif event.type == pygame.KEYDOWN:
+            key_bindings.process_key(event.key)
 
     display_surface.fill((0,0,0))
     render_level(display_surface, state.level)
