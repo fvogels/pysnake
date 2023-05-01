@@ -3,103 +3,15 @@ import random
 import sys
 from snake.position import Position
 from snake.direction import *
+from snake.cell import *
 from snake.timer import Timer
 from snake.keybindings import KeyBindings, ActionBuffer
-from snake.grid import Grid
+from snake.level import create_level
 import snake.actions as actions
 
 
 FRAMES_PER_SECOND = 75
 CELL_SIZE = 32
-
-
-class Empty:
-    @property
-    def color(self):
-        return pygame.Color('black')
-
-
-class Wall:
-    @property
-    def color(self):
-        return pygame.Color('white')
-
-
-class SnakeSegment:
-    def __init__(self, *, next=None):
-        self.next = next
-
-    @property
-    def color(self):
-        return pygame.Color('red')
-
-
-class SnakeHead:
-    @property
-    def color(self):
-        return pygame.Color('red4')
-
-
-class Food:
-    @property
-    def color(self):
-        return pygame.Color('green')
-
-
-class SpeedBoost:
-    @property
-    def color(self):
-        return pygame.Color('blue')
-
-
-WALL = Wall()
-EMPTY = Empty()
-FOOD = Food()
-SPEEDBOOST = SpeedBoost()
-
-
-class Level:
-    def __init__(self, width, height):
-        self.__grid = self.__create_empty_grid(width, height)
-
-    def __create_empty_grid(self, width, height):
-        def initialize(position):
-            x = position.x
-            y = position.y
-            if x == 0 or y == 0 or x == width - 1 or y == height - 1:
-                return WALL
-            else:
-                return EMPTY
-
-        return Grid(width, height, initialize)
-
-
-    @property
-    def width(self):
-        return self.__grid.width
-
-    @property
-    def height(self):
-        return self.__grid.height
-
-    def __getitem__(self, position):
-        return self.__grid[position]
-
-    def __setitem__(self, position, value):
-        self.__grid[position] = value
-
-
-def create_level():
-    level = Level(32, 32)
-    tail = Position(15, 16)
-    head = Position(16, 16)
-
-    level[tail] = SnakeSegment(next=head)
-    level[head] = SnakeHead()
-
-    return (level, head, tail, EAST)
-
-
 
 class Input:
     def __init__(self):
@@ -190,7 +102,7 @@ class State:
         if self.__bonus_timer.ready:
             self.__bonus_timer.consume()
             position = self.__find_random_empty_cell()
-            self.__level[position] = random.choice([FOOD, SPEEDBOOST])
+            self.__level[position] = random.choice([FOOD, SPEED_BOOST])
 
     def __update_movement(self, elapsed_seconds):
         self.__move_timer.tick(elapsed_seconds)
@@ -209,7 +121,7 @@ class State:
             destination_contents = self.__level[new_snake_head]
             if destination_contents is FOOD:
                 self.__snake_growth += 2
-            elif destination_contents is SPEEDBOOST:
+            elif destination_contents is SPEED_BOOST:
                 self.__move_timer.delay *= 0.9
             elif destination_contents is not EMPTY:
                 sys.exit(0)
