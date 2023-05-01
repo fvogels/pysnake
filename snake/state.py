@@ -62,6 +62,11 @@ class State:
         self.__bonus_timer = Timer(1)
         self.__snake_growth = 0
         self.__action_buffer = action_buffer
+        self.__game_in_progress = True
+
+    @property
+    def game_over(self):
+        return not self.__game_in_progress
 
     @property
     def level(self):
@@ -83,9 +88,10 @@ class State:
         self.__snake_tail = new_snake_tail
 
     def tick(self, elapsed_seconds):
-        self.__input.reset()
-        self.__update_bonuses(elapsed_seconds)
-        self.__update_movement(elapsed_seconds)
+        if self.__game_in_progress:
+            self.__input.reset()
+            self.__update_bonuses(elapsed_seconds)
+            self.__update_movement(elapsed_seconds)
 
     def __find_random_empty_cell(self):
         while True:
@@ -122,9 +128,12 @@ class State:
             elif destination_contents is SPEED_BOOST:
                 self.__move_timer.delay *= 0.9
             elif destination_contents is not EMPTY:
-                sys.exit(0)
+                self.__end_game()
             self.__advance_head_to(new_snake_head)
             if self.__snake_growth == 0:
                 self.__advance_tail()
             else:
                 self.__snake_growth -= 1
+
+    def __end_game(self):
+        self.__game_in_progress = False

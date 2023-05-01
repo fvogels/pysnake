@@ -74,3 +74,27 @@ class GameScreen(Screen):
 
     def tick(self, elapsed_seconds):
         self.__state.tick(elapsed_seconds)
+        if self.__state.game_over:
+            self._switch_screen(GameOverScreen(self._switch_screen))
+
+
+class GameOverScreen(Screen):
+    def __init__(self, switch_screen):
+        super().__init__(switch_screen)
+        font = pygame.font.SysFont(None, 128)
+        self.__buffer = font.render('Game Over', True, pygame.Color('red'))
+        self.__width, self.__height = self.__buffer.get_size()
+
+    def render(self, display_surface):
+        display_surface.fill(pygame.Color('black'))
+        width, height = display_surface.get_size()
+        x = (width - self.__width) / 2
+        y = (height - self.__height) / 2
+        display_surface.blit(self.__buffer, (x, y))
+
+    def tick(self, elapsed_seconds):
+        pass
+
+    def process_key(self, key):
+        if key == pygame.K_SPACE:
+            self._switch_screen(GameScreen(self._switch_screen))
