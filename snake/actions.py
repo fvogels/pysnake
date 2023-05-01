@@ -6,8 +6,6 @@ class Action:
         return self.__name
 
 
-
-
 LEFT = Action('left')
 RIGHT = Action('right')
 UP = Action('up')

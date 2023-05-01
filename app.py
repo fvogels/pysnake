@@ -5,6 +5,7 @@ from snake.position import Position
 from snake.direction import *
 from snake.timer import Timer
 from snake.keybindings import KeyBindings, ActionBuffer
+from snake.grid import Grid
 import snake.actions as actions
 
 
@@ -56,36 +57,36 @@ EMPTY = Empty()
 FOOD = Food()
 SPEEDBOOST = SpeedBoost()
 
+
 class Level:
     def __init__(self, width, height):
         self.__grid = self.__create_empty_grid(width, height)
 
     def __create_empty_grid(self, width, height):
-        def initialize(x, y):
+        def initialize(position):
+            x = position.x
+            y = position.y
             if x == 0 or y == 0 or x == width - 1 or y == height - 1:
                 return WALL
             else:
                 return EMPTY
 
-        return [
-            [initialize(x, y) for x in range(width)]
-            for y in range(height)
-        ]
+        return Grid(width, height, initialize)
 
 
     @property
     def width(self):
-        return len(self.__grid[0])
+        return self.__grid.width
 
     @property
     def height(self):
-        return len(self.__grid)
+        return self.__grid.height
 
     def __getitem__(self, position):
-        return self.__grid[position.y][position.x]
+        return self.__grid[position]
 
     def __setitem__(self, position, value):
-        self.__grid[position.y][position.x] = value
+        self.__grid[position] = value
 
 
 def create_level():
@@ -263,3 +264,4 @@ while True:
 
     elapsed_seconds = clock.tick(FRAMES_PER_SECOND) / 1000
     state.tick(elapsed_seconds)
+
